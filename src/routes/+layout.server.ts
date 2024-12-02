@@ -5,6 +5,6 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = ({ url }) => {
   // 현재 URL 경로가 '/'일 때만 리다이렉트
   if (url.pathname === '/') {
-    throw redirect(307, '/application');
+    throw redirect(307, '/applications');
   }
 };
