@@ -22,8 +22,9 @@
     <DropdownLabel value='Name' />
     <DropdownLabel value='Category' />
     <DropdownLabel value='Description' />
-    <DropdownLabel value='Link' />
-    <DropdownLabel value='Hashtag' />
+    <DropdownLabel value='Tag' />
+    <DropdownLabel value='Created_at' />
+    <DropdownLabel value='Updated_at' />
     </ul>
   {/if}
 </div>

@@ -1,137 +1,89 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Checkbox from './Checkbox.svelte';
+  import {isModal, tasks, selected, modalMode, modalData, orderIcon,} from "$lib/stores/tableStore";
   import Pagination from './Pagination.svelte';
   import ToggleColumns from './ToggleColumns.svelte';
-  import Thead from "$lib/components/Thead.svelte";
   import SearchBar from "$lib/components/SearchBar.svelte";
-  import {
-    itemsPerPage,
-    showCategory,
-    showDescription,
-    showHashtag,
-    showLink,
-    showName,
-    isModal,
-    tasks,
-    totalPages, selected
-  } from "$lib/stores/tableStore";
-  import Modal from "$lib/components/Modal.svelte";
+  import DataModal from "$lib/components/TableModal.svelte";
+  import TableHeaders from "$lib/components/TableHeaders.svelte";
+  import TableBody from "$lib/components/TableBody.svelte";
+  import ButtonItem from "$lib/components/ButtonItem.svelte";
+  import CategoryModal from "$lib/components/CategoryModal.svelte";
   
-  export let dataType = '';
-  
-  const toggleModal = () => {
-    $isModal = !$isModal;
-  }
-  
-  const onDelete = async () => {
-    const ids = $selected.map(item => item.id);
-    await tasks.deleteData(ids); // 삭제 API 호출
-    alert("삭제되었습니다.");
-    await tasks.getData(dataType);  // 삭제 후 데이터 호출
-    $totalPages = Math.ceil($tasks.task.length / itemsPerPage);  // 전체 페이지 수 계산
-  }
+  export let dataType: 'applications' | 'domains' | 'protocols';
   
   onMount(async () => {
-    await tasks.getData(dataType);  // 현재 페이지에 맞는 데이터 호출
-    $totalPages = Math.ceil($tasks.task.length / itemsPerPage);  // 전체 페이지 수 계산
+    await tasks.getDatas(dataType);  // 현재 페이지에 맞는 데이터 호출
+    // 정렬 아이콘 초기화
+    $orderIcon = {
+      Label: '↕',
+      Tag: '↕',
+      Created_at: '↕',
+      Updated_at: '↕',
+    };
   });
+  
+  // 모달 창 열림/닫힘
+  const toggleModal = async (type?: string) => {
+    // 수정 버튼일 경우
+    if (type === 'edit') {
+      $modalMode = 'edit'; // 모달 수정 모드 설정
+      try {
+        // 수정할 데이터 호출
+        if ($selected.tableItem !== null) {
+          await tasks.getData(dataType, $selected.tableItem);
+        }
+        const data = $tasks.dataItem[0];
+        
+        // 수정 데이터 모달 데이터에 할당
+        modalData.update(currentData => ({
+          ...currentData,
+          label: data.label,
+          type: data.type,
+          endpoint: data.endpoint,
+          category: data.categories[0].tag,
+          tag: data.tag,
+          description: data.description,
+        }));
+      } finally {
+        if ($tasks.status === 200) {
+          $isModal = !$isModal; // 모달 토글
+        } else if ($tasks.status === 404) {
+          alert("선택된 데이터에 오류가 발생했습니다. 다시 시도해 주세요.");
+        }
+      }
+      
+      // 추가 버튼일 경우
+    } else {
+      $modalMode = 'add'; // 모달 추가 모드 설정
+      $isModal = !$isModal;
+    }
+  }
 </script>
 
 <div class="h-full flex flex-col max-w-fit">
-  <Modal toggleModal={toggleModal} />
+  <DataModal dataType={dataType} toggleModal={toggleModal} />
+  <CategoryModal dataType={dataType} />
   <div class="flex justify-between items-center mb-4">
     <div class="w-1/2 flex">
-      <SearchBar />
-      {#if dataType === 'domain'}
-        <button
-          class="w-20 rounded-lg border border-gray-300 bg-black text-sm font-bold text-white transition
-        hover:bg-gray-200 hover:text-gray-500 mx-3"
-          on:click={toggleModal}
-        >
-          추가
-        </button>
-        <button
-          class="w-20 rounded-lg border border-gray-300 text-sm font-bold text-gray-400 transition
-        hover:bg-gray-200 hover:text-gray-500"
-          on:click={onDelete}
-        >
-          삭제
-        </button>
+      <SearchBar dataType={dataType} />
+      {#if dataType === 'domains'}
+        <ButtonItem button="추가" type="table" toggleModal={toggleModal}/>
+        <ButtonItem button="수정" type="table" toggleModal={toggleModal} />
+        <ButtonItem button="삭제" type="table" dataType={dataType} toggleModal={toggleModal} />
       {/if}
     </div>
     <ToggleColumns />
   </div>
   
-  <div class="flex-1 flex flex-col rounded-xl border border-gray-300 shadow-md px-3 overflow-x-auto">
+  <div class="flex-1 flex flex-col rounded-xl border border-gray-300 shadow-md px-3 overflow-x-auto min-w-[750px]">
     <table class="min-w-full w-full h-full table-fixed">
-      <thead class="bg-white border-b">
-      <tr class="h-12">
-        <th>
-          <Checkbox />
-        </th>
-        {#if $showName}
-          <Thead type="Name" />
-        {/if}
-        {#if $showCategory}
-          <Thead type="Category" />
-        {/if}
-        {#if $showDescription}
-          <Thead type="Description" />
-        {/if}
-        {#if $showLink}
-          <Thead type="Link" />
-        {/if}
-        {#if $showHashtag}
-          <Thead type="Hashtag" />
-        {/if}
-      </tr>
-      </thead>
-      
-      <tbody class="bg-white divide-y divide-gray-200 text-center border-b">
-      {#if $tasks && $tasks.paginated}
-        {#each $tasks.paginated as row}
-          <tr class="hover:bg-gray-50">  <!-- 행 호버 시 배경 색 변화 -->
-            <td>
-              <Checkbox value={row.id} />
-            </td>
-            {#if $showName}
-              <td class="truncate">
-                <span class="tooltip" title={row.name}>{row.name}</span>
-              </td>
-            {/if}
-            {#if $showCategory}
-              <td class="truncate">
-                <span class="tooltip" title={row.category}>{row.category}</span>
-              </td>
-            {/if}
-            {#if $showDescription}
-              <td class="truncate">
-                <span class="tooltip" title={row.description}>{row.description}</span>
-              </td>
-            {/if}
-            {#if $showLink}
-              <td class="text-center">
-                <a href={row.link} class="text-blue-500 hover:underline">🔗</a>
-              </td>
-            {/if}
-            {#if $showHashtag}
-              <td class="truncate">
-                {#each row.hashtags as hashtag, index (hashtag)}
-                  <span class="tooltip" title={hashtag}>
-                  {hashtag}{index < row.hashtags.length - 1 ? ', ' : ''}
-                  </span>
-                {/each}
-              </td>
-            {/if}
-          </tr>
-        {/each}
-      {/if}
-      </tbody>
+      <TableHeaders dataType={dataType} />
+      <TableBody dataType={dataType} />
     </table>
     
     <div class="m-3">
-      <Pagination />
+      <Pagination dataType={dataType} type="table" />
     </div>
   </div>
 </div>

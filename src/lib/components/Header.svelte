@@ -1,6 +1,6 @@
 <script lang="ts">
-  import HeaderMenu from "$lib/components/HeaderMenu.svelte";
   import { goto } from "$app/navigation";
+  import HeaderMenu from "$lib/components/HeaderMenu.svelte";
   
   const goMain = () => {
     goto("/");
@@ -12,10 +12,10 @@
     <button on:click={goMain}>Logo</button>
   </div>
   
-  <nav class="hidden sm:flex space-x-4 md:space-x-8 mx-4">
-    <HeaderMenu menu="Application" />
-    <HeaderMenu menu="Protocol" />
-    <HeaderMenu menu="Domain" />
+  <nav class="min-w-fit flex space-x-4 mx-4 md:space-x-8">
+    <HeaderMenu menu="Applications" />
+    <HeaderMenu menu="Protocols" />
+    <HeaderMenu menu="Domains" />
   </nav>
   
   <button

@@ -1,30 +1,46 @@
-<script lang="ts">
-  import {sortStates, tasks} from "$lib/stores/tableStore";
+<script lang='ts'>
+  import {orderIcon, tasks} from '$lib/stores/tableStore';
   
-  export let type = '';
+  export let type: 'Label' | 'Type' | 'Endpoint' | 'Description' | 'Tag' | 'Created_at' | 'Updated_at';
+  export let dataType = '';
+  export let sortBy = '';
   
-  const lowerType = type.toLowerCase();
-
-  const sortData = () => {
-    sortStates[lowerType].ascending = !sortStates[lowerType].ascending;
-    // 정렬 방향 토글
-    tasks.sorted(lowerType);
-    // tasks 데이터 정렬 호출
-    tasks.paginated();
-    // 현재 페이지 task 데이터 호출
-    console.log($tasks)
-  }
+  // 데이터 정렬
+  const sortData = async () => {
+    orderIcon.update((current) => {
+      const newIconState = {
+        Label: '↕',
+        Tag: '↕',
+        Created_at: '↕',
+        Updated_at: '↕',
+      };
+      
+      // type이 orderIcon의 키 중 하나인지 확인
+      if (type === 'Label' || type === 'Tag' || type === 'Created_at' || type === 'Updated_at') {
+        // 아이콘 상태 업데이트
+        newIconState[type] = current[type] === '↕' ? '↑' : current[type] === '↑' ? '↓' : '↑';
+      }
+      
+      return newIconState;
+    });
+    
+    // 아이콘 방향 설정
+    const orderBy = $orderIcon[type as 'Label' | 'Tag' | 'Created_at' | 'Updated_at'] === '↑' ? 'asc' :
+      $orderIcon[type as 'Label' | 'Tag' | 'Created_at' | 'Updated_at'] === '↓' ? 'desc' : '';
+    
+    // 정렬된 데이터 호출
+    await tasks.sorted(dataType, sortBy, orderBy);
+  };
   
-  $: columnStyle = type === 'Name' || type === 'Category' ? 'w-[30%]' : type === 'Description' ? 'w-[100%]' : type === 'Link' ? 'w-[10%]' : type === 'Hashtag' ? 'w-[50%]' : '';
+  $: columnStyle = type === 'Label' ? 'w-[20%]' : type === 'Type' ? 'w-[15%]' : type === 'Endpoint' ? 'w-[30%]' : type === 'Description' ? 'w-[65%]' : type === 'Tag' ? 'w-[20%]' : 'w-[20%]';
 </script>
 
-
-<th class={columnStyle}>
+<th class={`text-[13px] text-center select-none ${columnStyle}`}>
   {type}
-  {#if type !== 'Link' && type !== 'Hashtag'}
-    <button class="w-7 text-gray-400 cursor-pointer rounded-md hover:bg-gray-100 hover:text-gray-500"
+  {#if !(type === 'Description' || type === 'Type' || type === 'Endpoint')}
+    <button class='w-7 text-gray-400 cursor-pointer rounded-md hover:bg-gray-100 hover:text-gray-500'
             on:click={sortData}>
-      {sortStates[lowerType].ascending ? '↑' : '↓'}
+      {$orderIcon[type]}
     </button>
   {/if}
 </th>

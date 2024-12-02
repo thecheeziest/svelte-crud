@@ -3,5 +3,5 @@
 </script>
 
 <div class="py-4 px-8 h-full">
-  <Table dataType="protocol" />
+  <Table dataType="domains" />
 </div>

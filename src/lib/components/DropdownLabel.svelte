@@ -1,5 +1,5 @@
 <script>
-  import {showCategory, showDescription, showHashtag, showLink, showName} from '$lib/stores/tableStore';
+  import {showCategory, showDescription, showTag, showLabel, showCreatedAt, showUpdatedAt} from '$lib/stores/tableStore';
   
   export let value = '';
 </script>
@@ -9,7 +9,7 @@
     {#if value === 'Name'}
       <input
         type="checkbox"
-        bind:checked={$showName}
+        bind:checked={$showLabel}
         class="sr-only peer"
       />
     {:else if value === 'Category'}
@@ -24,16 +24,22 @@
         bind:checked={$showDescription}
         class="sr-only peer"
       />
-    {:else if value === 'Link'}
+    {:else if value === 'Tag'}
       <input
         type="checkbox"
-        bind:checked={$showLink}
+        bind:checked={$showTag}
         class="sr-only peer"
       />
-    {:else if value === 'Hashtag'}
+    {:else if value === 'Created_at'}
       <input
         type="checkbox"
-        bind:checked={$showHashtag}
+        bind:checked={$showCreatedAt}
+        class="sr-only peer"
+      />
+    {:else if value === 'Updated_at'}
+      <input
+        type="checkbox"
+        bind:checked={$showUpdatedAt}
         class="sr-only peer"
       />
     {/if}

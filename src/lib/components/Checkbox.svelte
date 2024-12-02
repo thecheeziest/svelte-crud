@@ -1,40 +1,31 @@
 <script lang="ts">
-  import {selected, tasks} from '$lib/stores/tableStore';
+  import {categories, selected, tasks} from '$lib/stores/tableStore';
   
-  export let value = 0; // 현재 체크박스의 id
-  let checked = false;
+  export let value: string | number; // 현재 체크박스의 id
+  export let type: string; // 현재 체크박스의 id
   
   const handleChange = () => {
-    if (value === 0) {
-      // 전체 선택일 경우
-      if (checkValue) {
-        // 선택 시
-        selected.allChecked(paginatedIds);
-      } else {
-        // 해제 시
-        selected.resetChecked();
+    // 전체 체크박스
+    if (value === 'all') {
+      if (checked) { // 선택 시
+        const pageIds = type === 'table' ? $tasks.data.map(task => ({ id: task.id })) : $categories.data.map(category => ({ id: category.id }));
+        selected.allChecked(pageIds, type);
+      } else { // 해제 시
+        selected.resetChecked(type); // 체크박스 데이터 초기화
       }
-    } else {
-      // 개별 선택일 경우
-      selected.checked(value);
+      // 개별 체크박스
+    } else if (typeof value === 'number') {
+      selected.checked(value, type);
     }
   };
   
-  // 전체 선택 체크박스 상태
-  $: checked = paginatedIds.every((id) =>
-    $selected.some(item => item.id === id)
-  );
-  
-  // 개별 체크박스 상태
-  $: checkValue = (value === 0 && paginatedIds.length !== 0) ? checked : $selected.some(item => item.id === value);
-  
-  // 현재 페이지 id 목록
-  $: paginatedIds = ($tasks && $tasks.paginated) ? $tasks.paginated.map(item => item.id) : [];
+  // 체크박스 상태 - 타입별 아이템에 현재 value 존재 여부
+  $: checked = type === 'table' ? $selected.tableItems.some(item => item.id === value) : $selected.categoryItems.some(item => item.id === value)
 </script>
 
 <input
   type="checkbox"
-  class="h-4 w-4 m-2 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-  bind:checked={checkValue}
+  class="text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+  bind:checked={checked}
   on:change={handleChange}
 />
